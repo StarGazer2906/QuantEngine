@@ -65,3 +65,113 @@ int Date::year() const
     return year_;
 }
 
+bool Date::operator<(const Date& other) const
+{
+    if(year_ !=other.year_)
+        return year_ <other.year_;
+    if (month_ != other.month_)
+        return month_ <other.month_;
+    return day_ <other.day_;
+}
+
+bool Date::operator==(const Date& other) const
+{
+    return ((year_==other.year_)&&(month_==other.month_)&&(day_==other.day_));
+}
+
+bool Date::operator!=(const Date& other) const
+{
+    return (!(*this == other));
+}
+
+bool Date::operator>(const Date& other) const
+{
+    return (!((*this<other)||(*this == other)));
+}
+
+bool Date::operator<=(const Date& other) const
+{
+    return ((*this==other)||(*this<other));
+}
+
+bool Date::operator>=(const Date& other) const
+{
+    return (!(*this<other));
+}
+
+int Date::toSerial() const
+{
+    int anchor_yr=1900;
+    int num_yrs=year_-anchor_yr;
+    int leap_yrs=0;
+    for (int i=anchor_yr; i<year_;i++)
+    {
+        if (isLeapYear(i))
+            leap_yrs+=1;
+    }
+    int tot_days=0;
+    for (int i=1; i<month_; i++)
+    {
+        int days=daysInMonth(i, year_);
+        tot_days+=days;
+    }
+    return leap_yrs+(num_yrs*365) + day_+tot_days;
+
+}
+
+int daysInYear(int yr) 
+{
+    if (isLeapYear(yr))
+        return 366;
+    return 365;
+}
+
+Date Date::fromSerial(int serial) 
+{
+    int anchor_yr=1900;
+    int new_serial = serial;
+    int i=1900;
+    while (true)
+    {
+        if (new_serial<=daysInYear(i))
+            break;
+        else
+        {
+            new_serial=new_serial-daysInYear(i);
+            i++;
+        }
+    }
+    int j = 1;
+
+    while (true)
+    {
+        if (new_serial <= daysInMonth(j, i))
+            break;
+        else
+        {
+            new_serial = new_serial - daysInMonth(j, i);
+            j++;
+        }
+    }
+
+    // new_serial = day
+    // j = month
+    // i = year
+    return Date(new_serial, j, i);
+    
+}
+
+Date Date::operator+(int days) const
+{
+    return Date::fromSerial(toSerial() + days); // we can skip writing *this inside a member class function
+} 
+
+Date Date::operator-(int days) const
+{
+    return Date::fromSerial(toSerial() - days); 
+} 
+
+int Date::operator-(const Date& other) const
+{
+    return toSerial() - other.toSerial();
+}
