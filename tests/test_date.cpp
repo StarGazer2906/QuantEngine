@@ -185,6 +185,24 @@ int main()
 
     assert(d22 - d23 == 2);
     assert(d23 - d22 == -2);
+
+    // Weekend check
+
+    Date d24(1, 1, 1900);
+    assert(d24.dayOfWeek() == 1);
+    assert(!d24.isWeekend());
+
+    Date d25(6, 1, 1900);
+    assert(d25.dayOfWeek() == 6);
+    assert(d25.isWeekend());
+
+    Date d26(7, 1, 1900);
+    assert(d26.dayOfWeek() == 0);
+    assert(d26.isWeekend());
+
+    Date d27(8, 1, 1900);
+    assert(d27.dayOfWeek() == 1);
+    assert(!d27.isWeekend());
     
     return 0;
 }

@@ -30,5 +30,7 @@ class Date
         Date operator-(int days) const;
         int operator-(const Date& other) const; //operator overloading with same symbol but distinguished based on parameter list
 
+        int dayOfWeek() const;
+        bool isWeekend() const;
 };
 #endif

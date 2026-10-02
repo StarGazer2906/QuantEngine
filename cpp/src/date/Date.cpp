@@ -144,3 +144,15 @@ int Date::operator-(const Date& other) const
 {
     return toSerial() - other.toSerial();
 }
+
+int Date::dayOfWeek() const
+{
+    int serial =toSerial();
+    return serial%7; // 0 = Sunday, .., 6 = Saturday
+}
+
+bool Date::isWeekend() const
+{
+    int day=dayOfWeek();
+    return (day==6)||(day==0);
+}
