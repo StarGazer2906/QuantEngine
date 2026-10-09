@@ -156,3 +156,25 @@ bool Date::isWeekend() const
     int day=dayOfWeek();
     return (day==6)||(day==0);
 }
+
+Date Date::addMonths(int months) const
+{
+
+int mth_new = month_ + months;
+int yr_new = year_;
+
+if (mth_new % 12 != 0)
+{
+    if (day_ > daysInMonth(mth_new % 12 , yr_new + (mth_new - 1)/ 12))
+    {
+        return Date(daysInMonth(mth_new % 12 , yr_new + (mth_new - 1) / 12), mth_new % 12, yr_new + (mth_new - 1) / 12);
+    }
+        
+    return Date(day_, mth_new % 12, yr_new + (mth_new - 1) / 12);
+}
+else
+{
+    return Date(day_, 12, yr_new + (mth_new - 1) / 12);
+}
+
+}

@@ -124,3 +124,63 @@ bool USExchangeCalendar::isBusinessDay(const Date& date) const
 
     return !(date.isWeekend() || isHoliday(date));
 }
+
+// function that keeps moving date forward until a business day is obtained
+
+Date USExchangeCalendar::following(const Date& date) const 
+{
+    int i=0;
+
+    while (true)
+    {
+      if (isBusinessDay(date+i))
+      {
+        break;
+      }
+      i++;
+    }
+
+    return date + i;
+}
+
+Date USExchangeCalendar::preceding(const Date& date) const
+{
+ int i=0;
+
+    while (true)
+    {
+      if (isBusinessDay(date-i))
+      {
+        break;
+      }
+      i++;
+    }
+
+    return date - i;   
+}
+
+Date USExchangeCalendar::modifiedFollowing(const Date& date) const
+{
+    
+    Date following_date = following(date);
+    
+    if (following_date.month() != date.month())
+    {
+        return preceding(date);
+    }
+
+    return following_date;
+
+}
+
+Date USExchangeCalendar::modifiedPreceding(const Date& date) const
+{
+    Date preceding_date = preceding(date);
+    
+    if (preceding_date.month() != date.month())
+    {
+        return following(date);
+    }
+
+    return preceding_date;
+}

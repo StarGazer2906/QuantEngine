@@ -20,5 +20,9 @@ class USExchangeCalendar
         
         bool isHoliday(const Date& date) const;
         bool isBusinessDay(const Date& date) const;
+        Date following(const Date& date) const;
+        Date preceding(const Date& date) const;
+        Date modifiedFollowing(const Date& date) const;
+        Date modifiedPreceding(const Date& date) const;
         
 };

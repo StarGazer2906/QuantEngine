@@ -32,5 +32,6 @@ class Date
 
         int dayOfWeek() const;
         bool isWeekend() const;
+        Date addMonths(int months) const;
 };
 #endif

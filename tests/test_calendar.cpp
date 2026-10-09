@@ -141,5 +141,107 @@ int main()
 
     assert(!calendar.isHoliday(Date(1, 1, 2022)));
 
+
+    // Test following() - business day remains unchanged
+    Date following1(2, 7, 2026);
+    assert(calendar.following(following1) == Date(2, 7, 2026));
+
+    // Test following() - Saturday moves to Monday
+    Date following2(4, 7, 2026);
+    assert(calendar.following(following2) == Date(6, 7, 2026));
+
+    // Test following() - Sunday moves to Monday
+    Date following3(5, 7, 2026);
+    assert(calendar.following(following3) == Date(6, 7, 2026));
+
+    // Test following() - weekday holiday moves to next business day
+    Date following4(25, 12, 2026);
+    assert(calendar.following(following4) == Date(28, 12, 2026));
+
+    // Test following() - Thanksgiving moves to next business day
+    Date following5(26, 11, 2026);
+    assert(calendar.following(following5) == Date(27, 11, 2026));
+
+    // Test following() - Saturday after Thanksgiving moves to Monday
+    Date following6(28, 11, 2026);
+    assert(calendar.following(following6) == Date(30, 11, 2026));
+
+    // Test preceding() - business day remains unchanged
+    Date preceding1(2, 7, 2026);
+    assert(calendar.preceding(preceding1) == Date(2, 7, 2026));
+
+    // Test preceding() - Saturday July 4, observed holiday July 3
+    Date preceding2(4, 7, 2026);
+    assert(calendar.preceding(preceding2) == Date(2, 7, 2026));
+
+    // Test preceding() - Sunday after Independence Day
+    Date preceding3(5, 7, 2026);
+    assert(calendar.preceding(preceding3) == Date(2, 7, 2026));
+
+    // Test preceding() - Christmas moves to previous business day
+    Date preceding4(25, 12, 2026);
+    assert(calendar.preceding(preceding4) == Date(24, 12, 2026));
+
+    // Test preceding() - Thanksgiving moves to previous business day
+    Date preceding5(26, 11, 2026);
+    assert(calendar.preceding(preceding5) == Date(25, 11, 2026));
+
+    // Test preceding() - Saturday after Thanksgiving moves to Friday
+    Date preceding6(28, 11, 2026);
+    assert(calendar.preceding(preceding6) == Date(27, 11, 2026));
+
+    // Test modifiedFollowing() - business day remains unchanged
+    Date modFollowing1(2, 7, 2026);
+    assert(calendar.modifiedFollowing(modFollowing1) == Date(2, 7, 2026));
+
+    // Test modifiedFollowing() - Saturday at month end crosses into November,
+    // so move backward to the previous business day
+    Date modFollowing2(31, 10, 2026);
+    assert(calendar.modifiedFollowing(modFollowing2) == Date(30, 10, 2026));
+
+    // Test modifiedFollowing() - Sunday at month end crosses into June,
+    // so move backward to the previous business day
+    Date modFollowing3(31, 5, 2026);
+    assert(calendar.modifiedFollowing(modFollowing3) == Date(29, 5, 2026));
+
+    // Test modifiedFollowing() - holiday does not cross month
+    Date modFollowing4(25, 12, 2026);
+    assert(calendar.modifiedFollowing(modFollowing4) == Date(28, 12, 2026));
+
+    // Test modifiedFollowing() - Thanksgiving does not cross month
+    Date modFollowing5(26, 11, 2026);
+    assert(calendar.modifiedFollowing(modFollowing5) == Date(27, 11, 2026));
+
+    // Test modifiedFollowing() - Saturday does not cross month
+    Date modFollowing6(28, 11, 2026);
+    assert(calendar.modifiedFollowing(modFollowing6) == Date(30, 11, 2026));
+
+    // Test modifiedPreceding() - business day remains unchanged
+    Date modPreceding1(2, 7, 2026);
+    assert(calendar.modifiedPreceding(modPreceding1) == Date(2, 7, 2026));
+
+    // Test modifiedPreceding() - Saturday moves to previous business day
+    Date modPreceding2(4, 7, 2026);
+    assert(calendar.modifiedPreceding(modPreceding2) == Date(2, 7, 2026));
+
+    // Test modifiedPreceding() - Sunday moves to previous business day
+    Date modPreceding3(5, 7, 2026);
+    assert(calendar.modifiedPreceding(modPreceding3) == Date(2, 7, 2026));
+
+    // Test modifiedPreceding() - Christmas moves to previous business day
+    Date modPreceding4(25, 12, 2026);
+    assert(calendar.modifiedPreceding(modPreceding4) == Date(24, 12, 2026));
+
+    // Test modifiedPreceding() - Sunday at beginning of month crosses
+    // into the previous month, so move forward instead
+    Date modPreceding5(1, 11, 2026);
+    assert(calendar.modifiedPreceding(modPreceding5) == Date(2, 11, 2026));
+
+    // Test modifiedPreceding() - Saturday at beginning of month crosses
+    // into the previous month, so move forward instead
+    Date modPreceding6(1, 8, 2026);
+    assert(calendar.modifiedPreceding(modPreceding6) == Date(3, 8, 2026));
+
+
     return 0;
 }

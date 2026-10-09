@@ -204,5 +204,38 @@ int main()
     assert(d27.dayOfWeek() == 1);
     assert(!d27.isWeekend());
     
+    // Test addMonths() - normal month
+    Date januaryDate(15, 1, 2026);
+    assert(januaryDate.addMonths(1) == Date(15, 2, 2026));
+
+    // Test addMonths() - several months
+    Date startOfYear(15, 1, 2026);
+    assert(startOfYear.addMonths(3) == Date(15, 4, 2026));
+
+    // Test addMonths() - crossing into next year
+    Date novemberDate(15, 11, 2026);
+    assert(novemberDate.addMonths(3) == Date(15, 2, 2027));
+
+    // Test addMonths() - exactly 12 months
+    Date annualDate(15, 1, 2026);
+    assert(annualDate.addMonths(12) == Date(15, 1, 2027));
+
+    // Test addMonths() - December rollover
+    Date decemberDate(15, 12, 2026);
+    assert(decemberDate.addMonths(1) == Date(15, 1, 2027));
+
+    // Test addMonths() - end of month, non-leap year
+    Date januaryEnd(31, 1, 2026);
+    assert(januaryEnd.addMonths(1) == Date(28, 2, 2026));
+
+    // Test addMonths() - end of month, leap year
+    Date januaryLeapYearEnd(31, 1, 2028);
+    assert(januaryLeapYearEnd.addMonths(1) == Date(29, 2, 2028));
+
+    // Test addMonths() - April has only 30 days
+    Date marchEnd(31, 3, 2026);
+    assert(marchEnd.addMonths(1) == Date(30, 4, 2026));
+
+
     return 0;
 }
