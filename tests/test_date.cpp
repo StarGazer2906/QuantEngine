@@ -1,241 +1,210 @@
+// Tests for Date (qe/date/Date.hpp) and the date utilities (qe/Calendar.hpp).
+// Ported from the old assert-based test_date.cpp (Checkpoint 1.1, Step B).
+
+#include <gtest/gtest.h>       // GoogleTest: TEST, EXPECT_EQ, EXPECT_THROW, ...
+#include <ostream>             // std::ostream, used by PrintTo below
+#include <stdexcept>           // std::invalid_argument
+
+#include "qe/Calendar.hpp"     // isLeapYear, daysInMonth
 #include "qe/date/Date.hpp"
-#include <cassert>
-#include<stdexcept>
 
-int main()
+// When a test fails, GoogleTest prints the values it compared.
+// This function teaches it to print a Date as day/month/year
+// (without it, a failing Date would be printed as raw bytes).
+void PrintTo(const Date& d, std::ostream* os)
 {
-    Date today(23, 9,2026);
+    *os << d.day() << "/" << d.month() << "/" << d.year();
+}
 
-    // std::cout<<today.day()<<"\n";
-    // std::cout<<today.month()<<"\n";
-    // std::cout<<today.year()<<"\n";
+// ---------------------------------------------------------------------
+// Date utilities
+// ---------------------------------------------------------------------
 
-    assert(today.day()==23);
-    assert(today.month()==9);
-    assert(today.year()==2026);
+TEST(DateUtilsTest, LeapYears)
+{
+    EXPECT_FALSE(isLeapYear(1900));   // divisible by 100 but not by 400
+    EXPECT_TRUE(isLeapYear(2000));    // divisible by 400
+    EXPECT_TRUE(isLeapYear(2024));    // divisible by 4
+    EXPECT_FALSE(isLeapYear(2025));
+}
 
+TEST(DateUtilsTest, DaysInFebruary)
+{
+    EXPECT_EQ(daysInMonth(2, 2024), 29);
+    EXPECT_EQ(daysInMonth(2, 2025), 28);
+}
+
+// ---------------------------------------------------------------------
+// Construction
+// ---------------------------------------------------------------------
+
+TEST(DateTest, StoresDayMonthYear)
+{
+    Date today(23, 9, 2026);
+    EXPECT_EQ(today.day(), 23);
+    EXPECT_EQ(today.month(), 9);
+    EXPECT_EQ(today.year(), 2026);
+}
+
+TEST(DateTest, AcceptsLeapDayInLeapYear)
+{
     Date leapDay(29, 2, 2024);
+    EXPECT_EQ(leapDay.day(), 29);
+    EXPECT_EQ(leapDay.month(), 2);
+    EXPECT_EQ(leapDay.year(), 2024);
+}
 
-    assert(leapDay.day() == 29);
-    assert(leapDay.month() == 2);
-    assert(leapDay.year() == 2024);
+TEST(DateTest, RejectsInvalidDates)
+{
+    EXPECT_THROW(Date(29, 2, 2025), std::invalid_argument);   // 2025 is not a leap year
+    EXPECT_THROW(Date(10, 13, 2026), std::invalid_argument);  // there is no month 13
+    EXPECT_THROW(Date(31, 4, 2026), std::invalid_argument);   // April has only 30 days
+}
 
-    try
-    {
-        Date badDate(29,2,2025);
-        assert(false);
-    }
-    catch (const std::invalid_argument&)
-    {
+// ---------------------------------------------------------------------
+// Comparison operators
+// ---------------------------------------------------------------------
 
-    }
-
-    try
-    {
-        Date badMonth(10, 13, 2026);
-        assert(false);
-    }
-    catch (const std::invalid_argument&)
-    {
-    }
-
-    try
-    {
-        Date badDay(31, 4, 2026);
-        assert(false);
-    }
-    catch (const std::invalid_argument&)
-    {
-    }
-
-    Date date1(15, 12, 2025);
-    Date date2(10, 1, 2026);
-
-    assert(date1 < date2);
-
-    Date date3(10, 1, 2026);
-    Date date4(10, 1, 2026);
-
-    assert(!(date3 < date4));
-
-    Date date5(20, 9, 2026);
-    Date date6(25, 9, 2026);
-
-    assert(date5 < date6);
-
-    assert(date3==date4);
-    assert(!(date1==date2));
-
-    Date date7(15, 12, 2025);
-    Date date8(16, 12, 2025);
-
-    assert(!(date7 == date8));   // different day
-
-    Date date9(15, 11, 2025);
-    assert(!(date7 == date9));   // different month
-
-    Date date10(15, 12, 2026);
-    assert(!(date7 == date10));  // different year
-
+TEST(DateTest, EarlierDateComparesLess)
+{
     Date a(20, 9, 2026);
     Date b(25, 9, 2026);
+
+    EXPECT_TRUE(a < b);
+    EXPECT_TRUE(a <= b);
+    EXPECT_TRUE(a != b);
+    EXPECT_FALSE(a > b);
+    EXPECT_FALSE(a >= b);
+    EXPECT_FALSE(a == b);
+
+    EXPECT_TRUE(b > a);
+    EXPECT_TRUE(b >= a);
+    EXPECT_FALSE(b < a);
+}
+
+TEST(DateTest, EqualDatesCompareEqual)
+{
+    Date a(20, 9, 2026);
     Date c(20, 9, 2026);
 
-    // a is earlier than b
-    assert(a < b);
-    assert(!(a > b));
-    assert(a <= b);
-    assert(!(a >= b));
+    EXPECT_TRUE(a == c);
+    EXPECT_FALSE(a != c);
+    EXPECT_TRUE(a <= c);
+    EXPECT_TRUE(a >= c);
+    EXPECT_FALSE(a < c);
+    EXPECT_FALSE(a > c);
+}
 
-    // a and c are equal
-    assert(a == c);
-    assert(!(a != c));
-    assert(a <= c);
-    assert(a >= c);
+TEST(DateTest, ComparisonUsesYearThenMonthThenDay)
+{
+    Date a(20, 9, 2026);
+    EXPECT_TRUE(Date(20, 9, 2025) < a);    // earlier year
+    EXPECT_TRUE(Date(20, 8, 2026) < a);    // earlier month
+    EXPECT_TRUE(Date(15, 12, 2025) < Date(10, 1, 2026));   // later month but earlier year
 
-    // a and b are not equal
-    assert(a != b);
+    Date x(15, 12, 2025);
+    EXPECT_FALSE(x == Date(16, 12, 2025));   // different day
+    EXPECT_FALSE(x == Date(15, 11, 2025));   // different month
+    EXPECT_FALSE(x == Date(15, 12, 2026));   // different year
+}
 
-    // b is later than a
-    assert(b > a);
-    assert(b >= a);
-    assert(!(b < a));
+// ---------------------------------------------------------------------
+// Serial numbers (day count since 31/12/1899, so 1/1/1900 = 1)
+// ---------------------------------------------------------------------
 
-    // Different year
-    Date d(20, 9, 2025);
-    assert(d < a);
-    assert(a > d);
+TEST(DateTest, ToSerialKnownValues)
+{
+    EXPECT_EQ(Date(1, 1, 1900).toSerial(), 1);
+    EXPECT_EQ(Date(2, 1, 1900).toSerial(), 2);
+    EXPECT_EQ(Date(31, 1, 1900).toSerial(), 31);
+    EXPECT_EQ(Date(1, 2, 1900).toSerial(), 32);
+    EXPECT_EQ(Date(1, 1, 1901).toSerial(), 366);
+    EXPECT_EQ(Date(1, 1, 2026).toSerial(), 46022);
+}
 
-    // Different month
-    Date e(20, 8, 2026);
-    assert(e < a);
-    assert(a > e);
+TEST(DateTest, FromSerialUndoesToSerial)
+{
+    // Round trip: date -> serial -> date must give back the same date.
+    EXPECT_EQ(Date::fromSerial(Date(15, 12, 2025).toSerial()), Date(15, 12, 2025));
+    EXPECT_EQ(Date::fromSerial(Date(31, 1, 2025).toSerial()), Date(31, 1, 2025));
+    EXPECT_EQ(Date::fromSerial(Date(1, 2, 2025).toSerial()), Date(1, 2, 2025));
+    EXPECT_EQ(Date::fromSerial(Date(31, 12, 2025).toSerial()), Date(31, 12, 2025));
+    EXPECT_EQ(Date::fromSerial(Date(1, 1, 2026).toSerial()), Date(1, 1, 2026));
+    EXPECT_EQ(Date::fromSerial(Date(29, 2, 2024).toSerial()), Date(29, 2, 2024));
+    EXPECT_EQ(Date::fromSerial(Date(29, 2, 2000).toSerial()), Date(29, 2, 2000));
+    EXPECT_EQ(Date::fromSerial(Date(28, 2, 1900).toSerial()), Date(28, 2, 1900));
+}
 
-    assert(Date(1, 1, 1900).toSerial() == 1);
-    assert(Date(2, 1, 1900).toSerial() == 2);
-    assert(Date(31, 1, 1900).toSerial() == 31);
-    assert(Date(1, 2, 1900).toSerial() == 32);
-    assert(Date(1, 1, 1901).toSerial() == 366);
+// ---------------------------------------------------------------------
+// Adding and subtracting days
+// ---------------------------------------------------------------------
 
-    Date d1(15, 12, 2025);
+TEST(DateTest, AddDays)
+{
+    Date d(28, 2, 2024);
+    EXPECT_EQ(d + 1, Date(29, 2, 2024));                  // leap day
+    EXPECT_EQ(d + 2, Date(1, 3, 2024));
+    EXPECT_EQ(Date(31, 12, 2025) + 1, Date(1, 1, 2026));  // year end
+    EXPECT_EQ(Date(1, 1, 2024) + 59, Date(29, 2, 2024));
+}
 
-    int serial = d1.toSerial();
+TEST(DateTest, SubtractDays)
+{
+    Date d(1, 3, 2024);
+    EXPECT_EQ(d - 1, Date(29, 2, 2024));
+    EXPECT_EQ(d - 2, Date(28, 2, 2024));
+    EXPECT_EQ(Date(1, 1, 2026) - 1, Date(31, 12, 2025));
+    EXPECT_EQ(Date(1, 3, 2024) - 59, Date(2, 1, 2024));
+}
 
-    Date d2 = Date::fromSerial(serial);
+TEST(DateTest, DifferenceInDays)
+{
+    EXPECT_EQ(Date(10, 1, 2026) - Date(1, 1, 2026), 9);
+    EXPECT_EQ(Date(1, 1, 2026) - Date(10, 1, 2026), -9);
+    EXPECT_EQ(Date(1, 3, 2024) - Date(28, 2, 2024), 2);   // crosses 29 Feb
+    EXPECT_EQ(Date(28, 2, 2024) - Date(1, 3, 2024), -2);
+}
 
-    assert(d1 == d2);
+// ---------------------------------------------------------------------
+// Day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+// ---------------------------------------------------------------------
 
-    Date d9(31, 1, 2025);
-    assert(Date::fromSerial(d9.toSerial()) == d9);
+TEST(DateTest, DayOfWeekAndWeekend)
+{
+    EXPECT_EQ(Date(1, 1, 1900).dayOfWeek(), 1);   // Monday
+    EXPECT_FALSE(Date(1, 1, 1900).isWeekend());
 
-    Date d8(1, 2, 2025);
-    assert(Date::fromSerial(d8.toSerial()) == d8);
+    EXPECT_EQ(Date(6, 1, 1900).dayOfWeek(), 6);   // Saturday
+    EXPECT_TRUE(Date(6, 1, 1900).isWeekend());
 
-    Date d3(31, 12, 2025);
-    assert(Date::fromSerial(d3.toSerial()) == d3);
+    EXPECT_EQ(Date(7, 1, 1900).dayOfWeek(), 0);   // Sunday
+    EXPECT_TRUE(Date(7, 1, 1900).isWeekend());
 
-    Date d4(1, 1, 2026);
-    assert(Date::fromSerial(d4.toSerial()) == d4);
+    EXPECT_EQ(Date(8, 1, 1900).dayOfWeek(), 1);   // Monday
+    EXPECT_FALSE(Date(8, 1, 1900).isWeekend());
+}
 
-    Date d5(29, 2, 2024);
-    assert(Date::fromSerial(d5.toSerial()) == d5);
+// ---------------------------------------------------------------------
+// addMonths (positive months only for now; negative months are bug H2)
+// ---------------------------------------------------------------------
 
-    Date d6(29, 2, 2000);
-    assert(Date::fromSerial(d6.toSerial()) == d6);
+TEST(DateTest, AddMonthsSimple)
+{
+    EXPECT_EQ(Date(15, 1, 2026).addMonths(1), Date(15, 2, 2026));
+    EXPECT_EQ(Date(15, 1, 2026).addMonths(3), Date(15, 4, 2026));
+    EXPECT_EQ(Date(15, 1, 2026).addMonths(12), Date(15, 1, 2027));
+}
 
-    Date d7(28, 2, 1900);
-    assert(Date::fromSerial(d7.toSerial()) == d7);
+TEST(DateTest, AddMonthsCrossesYearEnd)
+{
+    EXPECT_EQ(Date(15, 11, 2026).addMonths(3), Date(15, 2, 2027));
+    EXPECT_EQ(Date(15, 12, 2026).addMonths(1), Date(15, 1, 2027));
+}
 
-    Date d10(28, 2, 2024);
-
-    Date d11 = d10 + 1;
-    assert(d11 == Date(29, 2, 2024));
-
-    Date d12 = d10 + 2;
-    assert(d12 == Date(1, 3, 2024));
-
-    Date d13(31, 12, 2025);
-    assert(d13 + 1 == Date(1, 1, 2026));
-
-    Date d14(1, 1, 2024);
-    assert(d14 + 59 == Date(29, 2, 2024));
-
-    Date d15(1, 3, 2024);
-
-    Date d16 = d15 - 1;
-    assert(d16 == Date(29, 2, 2024));
-
-    Date d17 = d15 - 2;
-    assert(d17 == Date(28, 2, 2024));
-
-    Date d18(1, 1, 2026);
-    assert(d18 - 1 == Date(31, 12, 2025));
-
-    Date d19(1, 3, 2024);
-    assert(d19 - 59 == Date(2, 1, 2024));
-
-    Date d20(10, 1, 2026);
-    Date d21(1, 1, 2026);
-
-    assert(d20 - d21 == 9);
-    assert(d21 - d20 == -9);
-
-    Date d22(1, 3, 2024);
-    Date d23(28, 2, 2024);
-
-    assert(d22 - d23 == 2);
-    assert(d23 - d22 == -2);
-
-    // Weekend check
-
-    Date d24(1, 1, 1900);
-    assert(d24.dayOfWeek() == 1);
-    assert(!d24.isWeekend());
-
-    Date d25(6, 1, 1900);
-    assert(d25.dayOfWeek() == 6);
-    assert(d25.isWeekend());
-
-    Date d26(7, 1, 1900);
-    assert(d26.dayOfWeek() == 0);
-    assert(d26.isWeekend());
-
-    Date d27(8, 1, 1900);
-    assert(d27.dayOfWeek() == 1);
-    assert(!d27.isWeekend());
-    
-    // Test addMonths() - normal month
-    Date januaryDate(15, 1, 2026);
-    assert(januaryDate.addMonths(1) == Date(15, 2, 2026));
-
-    // Test addMonths() - several months
-    Date startOfYear(15, 1, 2026);
-    assert(startOfYear.addMonths(3) == Date(15, 4, 2026));
-
-    // Test addMonths() - crossing into next year
-    Date novemberDate(15, 11, 2026);
-    assert(novemberDate.addMonths(3) == Date(15, 2, 2027));
-
-    // Test addMonths() - exactly 12 months
-    Date annualDate(15, 1, 2026);
-    assert(annualDate.addMonths(12) == Date(15, 1, 2027));
-
-    // Test addMonths() - December rollover
-    Date decemberDate(15, 12, 2026);
-    assert(decemberDate.addMonths(1) == Date(15, 1, 2027));
-
-    // Test addMonths() - end of month, non-leap year
-    Date januaryEnd(31, 1, 2026);
-    assert(januaryEnd.addMonths(1) == Date(28, 2, 2026));
-
-    // Test addMonths() - end of month, leap year
-    Date januaryLeapYearEnd(31, 1, 2028);
-    assert(januaryLeapYearEnd.addMonths(1) == Date(29, 2, 2028));
-
-    // Test addMonths() - April has only 30 days
-    Date marchEnd(31, 3, 2026);
-    assert(marchEnd.addMonths(1) == Date(30, 4, 2026));
-
-
-    return 0;
+TEST(DateTest, AddMonthsClampsToMonthEnd)
+{
+    // If the target month is shorter, the day is moved back to its last day.
+    EXPECT_EQ(Date(31, 1, 2026).addMonths(1), Date(28, 2, 2026));   // non-leap year
+    EXPECT_EQ(Date(31, 1, 2028).addMonths(1), Date(29, 2, 2028));   // leap year
+    EXPECT_EQ(Date(31, 3, 2026).addMonths(1), Date(30, 4, 2026));   // April has 30 days
 }
